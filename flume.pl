@@ -59,3 +59,38 @@ print_piece(Piece) :-
 print_separator :- 
 		print('*-*-*-*-*-*-*-*\n').
 					
+%GameState = [Board, Player]
+gamestate(Board, Player, [Board, Player]).
+get_board([Board,Player], Board).
+get_player([Board, Player], Player).
+
+set_board([Board, Player], NewBoard, [NewBoard, Player]).
+set_player([Board, Player], NewPlayer, [Board, NewPlayer]).
+
+start :- 
+	initial_game_state(GameState),
+	play(GameState).
+
+initial_game_state(GameState):-
+	initial_board(Board),
+	gamestate(Board, red, GameState).
+	
+play(GameState, GameStateEnd):-
+	get_move(Pos),
+	valid_move(GameState, Pos), 
+	make_move(GameState, Pos, GameStateEnd).
+
+
+valid_move(GameState, Pos):-
+	get_board(GameState, Board),
+	get_piece(Board, Pos, blank).
+
+
+get_piece([Row|_], [0, Column], Piece) :-
+	get_piece_in_row(Row, 
+	
+	
+get_piece(Board, [Row, Column], Piece):-
+	
+	
+	
