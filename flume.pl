@@ -1,4 +1,5 @@
 :- use_module(library(lists)).
+:- use_module(library(random)).
 
 initial_board(Board) :- 
 	Board = [
@@ -130,8 +131,6 @@ initial_game_state(GameState, Mode):-
 game_loop(GameState):-
 	get_board(GameState, Board),
 	print_board(Board),
-	valid_moves(GameState, List),
-	write(List),
 	game_over(GameState, _Winner);
 
 	move(GameState, NewGameState),
@@ -146,15 +145,27 @@ move(GameState, NextGameState):-
 choose_move(GameState, NextGameState, red, _):-
 	get_move_input(Pos),
 	valid_move(GameState, Pos),
-	make_move(GameState, Pos, NextGameState),
-	write('YAY1'), nl.
+	make_move(GameState, Pos, NextGameState).
 
 
 choose_move(GameState, NextGameState, blue, '1'):-
 	get_move_input(Pos),
 	valid_move(GameState, Pos),
-	make_move(GameState, Pos, NextGameState),
-	write('YAY2'), nl.
+	make_move(GameState, Pos, NextGameState).
+
+choose_move(GameState, NextGameState, blue, '2'):-
+	valid_moves(GameState, List),
+	listLength(List, Length),
+	random(1, Length, Index),
+	nth1(Index, List, Pos),
+	make_move(GameState, Pos, NextGameState).
+
+
+
+
+listLength([], 0).
+listLength([_H | T], Size):- 
+	listLength(T, NS), Size is 1 + NS.
 
 %TODO: outros choose_move consoante o modo (blue, '2') para easy e (blue, '3') para hard
 
