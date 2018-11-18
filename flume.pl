@@ -89,7 +89,14 @@ test :-
 
 start :- 
 	initial_game_state(GameState),
-	play(GameState).
+	game_loop(GameState).
+
+game_loop(GameState):-
+	get_board(GameState, Board),
+	print_board(Board),
+	\+ game_finished(GameState),
+	play(GameState, NewGameState),
+	game_loop(NewGameState).
 
 initial_game_state(GameState):-
 	initial_board(Board),
@@ -102,7 +109,7 @@ play(GameState, NextGameState):-
 
 game_finished(GameState):-
 	get_board(GameState, Board),
-	\+ get_piece(Board, _, blank).
+	\+(get_piece(Board, [X, Y], Elem), Elem ==blank).
 
 
 valid_move(GameState, Pos):-
@@ -175,5 +182,19 @@ decide_next_player(GameState, Pos, NewPlayer):-
 	\+ same_player(GameState, Pos),
 	get_player(GameState, Player),
 	next_player(Player, NewPlayer).
-	
 
+get_move(Pos):-
+	repeat,
+	read_line(Input),
+	nth1(1, Input, X_temp),
+	nth1(3, Input, Y_temp),
+	check_number(X_temp),
+	check_number(Y_temp),
+	number_codes(X, [X_temp]),
+	number_codes(Y, [Y_temp]),
+	Pos = [X, Y].
+
+check_number(Num):-
+	char_code(Char, Num),
+	Char @> '0',
+	Char @< '6'.
