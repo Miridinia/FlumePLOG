@@ -114,6 +114,7 @@ increment(GameState, blue, NewGameState):-
 
 
 start :- 
+	write('First play by red'), nl,
 	initial_game_state(GameState),
 	game_loop(GameState).
 
@@ -198,7 +199,9 @@ make_move(GameState, Pos, NextGameState) :-
 	value(NewGameState_temp, Blank),
 
 	decide_next_player(NewGameState, Pos, NewPlayer),
-	set_player(NewGameState_temp, NewPlayer, NextGameState).
+	set_player(NewGameState_temp, NewPlayer, NextGameState),
+
+	format('Next play by ~w', NewPlayer), nl.
 
 
 next_player(blue, red).
@@ -243,11 +246,8 @@ value(GameState, Blank):-
 	get_blue_num(GameState, Blue_Num),
 	Total is Red_Num + Blue_Num,
 	Blank is 25 - Total,
-	get_player(GameState, Player),
-	next_player(Player, Next),
 
-	nl, format('Next play by ~w', Next), nl,
-
+	nl,
 	format('Red: ~w ', Red_Num),
 	format('Blue: ~w ', Blue_Num),
 	format('Blanks: ~w', Blank), nl.
