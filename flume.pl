@@ -120,15 +120,15 @@ start :-
 game_loop(GameState):-
 	get_board(GameState, Board),
 	print_board(Board),
-	\+ game_over(GameState, Winner),
-	play(GameState, NewGameState),
+	game_over(GameState, _Winner);
+	move(GameState, NewGameState),
 	game_loop(NewGameState).
 
 initial_game_state(GameState):-
 	initial_board(Board),
 	gamestate(Board, red, 0, 0, GameState).
 		
-play(GameState, NextGameState):-
+move(GameState, NextGameState):-
 	get_move(Pos),
 	valid_move(GameState, Pos), 
 	make_move(GameState, Pos, NextGameState).
@@ -136,12 +136,13 @@ play(GameState, NextGameState):-
 
 game_over([_Board, _Player, Red, Blue], Winner) :-
 	Red + Blue =:= 25,
-	get_winner(Red, Blue, Winner).
+	get_winner(Red, Blue, Winner),
+	format('~w wins', Winner), nl.
 	
-get_winner(Red, Blue, 'red') :-
+get_winner(Red, Blue, red) :-
 	Red > Blue, !.
 
-get_winner(_Red, _Blue, 'blue').
+get_winner(_Red, _Blue, blue).
 
 
 valid_move(GameState, Pos):-
@@ -242,6 +243,10 @@ value(GameState, Blank):-
 	get_blue_num(GameState, Blue_Num),
 	Total is Red_Num + Blue_Num,
 	Blank is 25 - Total,
+	get_player(GameState, Player),
+	next_player(Player, Next),
+
+	nl, format('Next play by ~w', Next), nl,
 
 	format('Red: ~w ', Red_Num),
 	format('Blue: ~w ', Blue_Num),
