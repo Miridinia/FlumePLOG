@@ -71,8 +71,8 @@ print_piece(Piece) :-
 print_separator :- 
 		print('*-*-*-*-*-*-*-*\n').
 					
-%GameState = [Board, Player, Red_Num, Blue_num]
-gamestate(Board, Player, Red_Num, Blue_Num, [Board, Player, Red_Num, Blue_Num]).
+%GameState = [Board, Player, Red_Num, Blue_num, Mode]
+gamestate(Board, Player, Red_Num, Blue_Num, Mode, [Board, Player, Red_Num, Blue_Num, Mode]).
 get_board(GameState, Board):-
 	nth1(1, GameState, Board).
 get_player(GameState, Player):-
@@ -81,6 +81,8 @@ get_red_num(GameState, Red_Num):-
 	nth1(3, GameState, Red_Num).
 get_blue_num(GameState, Blue_Num):-
 	nth1(4, GameState, Blue_Num).
+get_mode(GameState, Mode):-
+	nth1(5, GameState, Mode).
 
 
 set_gamestate_elem(1, Elem, [_|GameState], [Elem|GameState]).
@@ -97,6 +99,8 @@ set_red_num(GameState, NewRedNum, NewGameState):-
 	set_gamestate_elem(3, NewRedNum, GameState, NewGameState).
 set_blue_num(GameState, NewBlueNum, NewGameState):-
 	set_gamestate_elem(4, NewBlueNum, GameState, NewGameState).
+set_mode(GameState, NewMode, NewGameState):-
+	set_gamestate_elem(5, NewMode, GameState, NewGameState).
 
 increment_Red(GameState, NewGameState):-
 	get_red_num(GameState, RedNum),
@@ -114,28 +118,52 @@ increment(GameState, blue, NewGameState):-
 
 
 start :- 
+	read_mode_input(Mode),
+	initial_game_state(GameState, Mode),
 	write('First play by red'), nl,
-	initial_game_state(GameState),
 	game_loop(GameState).
+
+initial_game_state(GameState, Mode):-
+	initial_board(Board),
+	gamestate(Board, red, 0, 0, Mode, GameState).
 
 game_loop(GameState):-
 	get_board(GameState, Board),
 	print_board(Board),
+	valid_moves(GameState, List),
+	write(List),
 	game_over(GameState, _Winner);
+
 	move(GameState, NewGameState),
 	game_loop(NewGameState).
 
-initial_game_state(GameState):-
-	initial_board(Board),
-	gamestate(Board, red, 0, 0, GameState).
-		
+
 move(GameState, NextGameState):-
-	get_move(Pos),
-	valid_move(GameState, Pos), 
-	make_move(GameState, Pos, NextGameState).
+	get_player(GameState, Player),
+	get_mode(GameState, Mode),
+	choose_move(GameState, NextGameState, Player, Mode).
+
+choose_move(GameState, NextGameState, red, _):-
+	get_move_input(Pos),
+	valid_move(GameState, Pos),
+	make_move(GameState, Pos, NextGameState),
+	write('YAY1'), nl.
 
 
-game_over([_Board, _Player, Red, Blue], Winner) :-
+choose_move(GameState, NextGameState, blue, '1'):-
+	get_move_input(Pos),
+	valid_move(GameState, Pos),
+	make_move(GameState, Pos, NextGameState),
+	write('YAY2'), nl.
+
+%TODO: outros choose_move consoante o modo (blue, '2') para easy e (blue, '3') para hard
+
+
+
+
+
+
+game_over([_Board, _Player, Red, Blue, _Mode], Winner) :-
 	Red + Blue =:= 25,
 	get_winner(Red, Blue, Winner),
 	format('~w wins', Winner), nl.
@@ -196,7 +224,7 @@ make_move(GameState, Pos, NextGameState) :-
 	set_piece(Board, Pos, Player, NewBoard),
 	set_board(GameState, NewBoard, NewGameState),
 	increment(NewGameState, Player, NewGameState_temp),
-	value(NewGameState_temp, Blank),
+	value(NewGameState_temp, _Blank),
 
 	decide_next_player(NewGameState, Pos, NewPlayer),
 	set_player(NewGameState_temp, NewPlayer, NextGameState),
@@ -225,7 +253,7 @@ decide_next_player(GameState, Pos, NewPlayer):-
 
 
 
-get_move(Pos):-
+get_move_input(Pos):-
 	repeat,
 	read_line(Input),
 	nth1(1, Input, X_temp),
@@ -235,6 +263,7 @@ get_move(Pos):-
 	number_codes(X, [X_temp]),
 	number_codes(Y, [Y_temp]),
 	Pos = [X, Y].
+	%TODO: handle input
 
 check_number(Num):-
 	char_code(Char, Num),
@@ -251,3 +280,38 @@ value(GameState, Blank):-
 	format('Red: ~w ', Red_Num),
 	format('Blue: ~w ', Blue_Num),
 	format('Blanks: ~w', Blank), nl.
+
+read_mode_input(Mode):-
+	repeat,
+	write('----- MODE -----'), nl,
+	write('1 - Player vs. Player'), nl,
+	write('2 - Player vs. Easy AI'), nl,
+	write('3 - Player vs. Hard AI'), nl,
+	write('Mode: '),
+	get_char(Mode).
+	%TODO: handle input
+
+
+all_positions(AllPos):- 
+	AllPos = [
+		[0,0],[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],
+		[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],
+		[2,0],[2,1],[2,2],[2,3],[2,4],[2,5],[2,6],
+		[3,0],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],
+		[4,0],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],
+		[5,0],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],
+		[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6]].
+
+
+valid_moves(GameState, ValidMoveList) :-
+	all_positions(MoveList),
+	choose_valid_moves(GameState, MoveList, ValidMoveList).
+
+choose_valid_moves(_, [], []).
+choose_valid_moves(GameState, [ValidMove|MoveList], [ValidMove|ValidMoveList]):-
+	valid_move(GameState, ValidMove),
+	choose_valid_moves(GameState, MoveList, ValidMoveList).
+
+choose_valid_moves(GameState, [InvalidMove|MoveList], ValidMoveList):-
+	\+ valid_move(GameState, InvalidMove),
+	choose_valid_moves(GameState, MoveList, ValidMoveList).
